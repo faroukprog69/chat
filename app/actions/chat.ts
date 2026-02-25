@@ -132,6 +132,12 @@ export async function getMyConversations(userId: string) {
 export type Conversations = Awaited<ReturnType<typeof getMyConversations>>;
 export type ConversationParticipantEntry = Conversations[number];
 
+export async function deleteConversationAction(conversationId: string) {
+  console.log("DELETE CONVERSATION ACTION");
+  await db.delete(conversations).where(eq(conversations.id, conversationId));
+  revalidatePath("/chat");
+}
+
 export async function getMessagesByConversationId(
   conversationId: string,
   offset: number = 0,

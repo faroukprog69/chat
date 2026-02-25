@@ -5,6 +5,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ArrowRight,
   ImageIcon,
   MoreVertical,
@@ -16,6 +22,7 @@ import {
   getMessagesByConversationId,
   updateLastReadMessage,
   getOlderMessages,
+  deleteConversationAction,
 } from "@/app/actions/chat";
 import { resolveConversationTitle } from "@/lib/utilites";
 import { useChatChannel } from "@/realtime/use-channel";
@@ -24,6 +31,7 @@ import { deriveSharedSecret } from "@/lib/crypto/exchange";
 import { decryptData } from "@/lib/crypto/decrypt";
 import { base64ToBuffer } from "@/lib/crypto/encoding";
 import { useMessagesStore } from "@/store/useMessagesStore";
+import { ChatView } from ".";
 
 interface MessageBubbleProps {
   message: string;
@@ -61,12 +69,14 @@ interface ChatMainProps {
   currentUserId: string;
   conversation: ConversationParticipantEntry;
   privateKey: CryptoKey;
+  setView: (view: ChatView) => void;
 }
 
 export function ChatMain({
   currentUserId,
   conversation,
   privateKey,
+  setView,
 }: ChatMainProps) {
   const [localMessages, setLocalMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
@@ -341,6 +351,10 @@ export function ChatMain({
     await sendMessage(newMessage);
   };
 
+  const handleRemoveConversation = async () => {
+    await deleteConversationAction(conversation.conversation.id);
+    setView({ type: "idle" });
+  };
   const currentChatUser = {
     name: resolveConversationTitle(conversation, currentUserId),
     avatarSrc: conversation.conversation.avatar,
@@ -360,10 +374,16 @@ export function ChatMain({
             <h2 className="font-semibold">{currentChatUser.name}</h2>
           </div>
         </div>
-        <HugeiconsIcon
-          icon={MoreVertical}
-          className="text-muted-foreground h-5 w-5 cursor-pointer"
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+            <HugeiconsIcon icon={MoreVertical} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={handleRemoveConversation}>
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div

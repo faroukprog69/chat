@@ -17,7 +17,7 @@ import { resolveConversationTitle } from "@/lib/utilites";
 import { cn } from "@/lib/utils";
 import SettingsPage from "../settings";
 
-type ChatView =
+export type ChatView =
   | { type: "idle" }
   | { type: "chat"; conversationId: string }
   | { type: "create" }
@@ -116,6 +116,7 @@ export default function Chat({
                         conversation={activeConversation}
                         currentUserId={user.id}
                         privateKey={privateKey}
+                        setView={setView}
                       />
                     </RealtimeChannel>
                   </RealtimeProvider>
