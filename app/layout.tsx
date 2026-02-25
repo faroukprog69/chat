@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const notoSans = Noto_Sans({ variable: "--font-sans" });
 
@@ -37,8 +38,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster position="top-center" />
-          <main> {children}</main>
+          <TooltipProvider>
+            <Toaster position="top-center" />
+            <main> {children}</main>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

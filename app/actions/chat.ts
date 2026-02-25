@@ -171,16 +171,24 @@ export async function getOlderMessages(
 export async function updateLastReadMessage({
   conversationId,
   messageId,
+  userId,
 }: {
   conversationId: string;
   messageId: string;
+  userId: string;
 }) {
+  console.log("UPDATE LAST READ MESSAGE ACTION");
   const updated = await db
     .update(conversationParticipants)
     .set({
       lastReadMessageId: messageId,
     })
-    .where(eq(conversationParticipants.conversationId, conversationId));
+    .where(
+      and(
+        eq(conversationParticipants.conversationId, conversationId),
+        eq(conversationParticipants.userId, userId), // 👈 ناقص هاد!
+      ),
+    );
 
   revalidatePath("/chat");
 }
@@ -192,6 +200,7 @@ export async function sendMessageToDbAction(payload: {
   ciphertext: string;
   iv: string;
 }) {
+  console.log("SEND MESSAGE ACTION");
   try {
     // 1. التحقق من الجلسة (أمان إضافي)
 
@@ -221,6 +230,7 @@ export async function sendMessageToDbAction(payload: {
 }
 
 export async function getMessage({ messageId }: { messageId: string }) {
+  console.log("GET MESSAGE ACTION");
   const msg = await db.query.messages.findFirst({
     where: eq(messages.id, messageId),
   });

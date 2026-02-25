@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,6 +15,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -121,6 +127,7 @@ export function CreateChatForm({
                           field.value === "group" ? "default" : "outline"
                         }
                         onClick={() => field.onChange("group")}
+                        disabled={true}
                       >
                         Group
                       </Button>

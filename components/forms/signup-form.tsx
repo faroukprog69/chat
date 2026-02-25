@@ -30,6 +30,8 @@ import {
 } from "@/lib/crypto/generateKeyPair";
 import { encryptData } from "@/lib/crypto/encrypt";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+
 // Zod schema for validation
 const signupSchema = z
   .object({
@@ -74,6 +76,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     },
     resolver: zodResolver(signupSchema),
   });
+
+  const router = useRouter();
 
   const handleSignup = async (data: SignupFormData) => {
     setIsLoding(true);
@@ -123,9 +127,10 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         setIsLoding(false);
         return;
       }
-      useInviteCode(data.inviteCode);
+      // useInviteCode(data.inviteCode);
       // Success
       toast.success("Account successfully created!");
+      router.push("/chat");
     } catch (err) {
       console.error("Error:", err);
       toast.error(err instanceof Error ? err.message : "Something went wrong");

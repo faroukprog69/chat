@@ -15,33 +15,30 @@ export function useChatChannel({
   channelName,
   privateKey,
   opponentPublicKey,
+  currentUserId,
   onMessage,
 }: {
   channelName: string;
   privateKey: CryptoKey | null;
   opponentPublicKey: string;
+  currentUserId: string;
   onMessage?: (msg: any) => void;
 }) {
   const { publish } = useChannel(channelName, async (msg: Message) => {
     try {
       if (!privateKey) return;
 
-      const sharedKey = await deriveSharedSecret(privateKey, opponentPublicKey);
+      // ❌ لا تحدث lastRead لرسائلك أنت
+      if (msg.data.senderId === currentUserId) return;
 
+      const sharedKey = await deriveSharedSecret(privateKey, opponentPublicKey);
       const decryptedContent = await decryptData(
         base64ToBuffer(msg.data.ciphertext),
         sharedKey,
         new Uint8Array(base64ToBuffer(msg.data.iv)),
       );
-      await updateLastReadMessage({
-        conversationId: msg.data.conversationId,
-        messageId: msg.data.id,
-      });
 
-      onMessage?.({
-        ...msg.data,
-        content: decryptedContent,
-      });
+      onMessage?.({ ...msg.data, content: decryptedContent });
     } catch (e) {
       console.error("Failed to decrypt message:", e);
     }

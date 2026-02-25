@@ -1,9 +1,8 @@
 "use client";
 
-import { Conversations } from "@/app/actions/chat";
+import { useState } from "react";
 import { ChatMain } from "@/components/chat/main";
 import { ChatSidebar } from "@/components/chat/sidebar";
-import { useState } from "react";
 import { CreateChatForm } from "./create";
 import { RealtimeChannel } from "@/components/providers/channel-provider";
 import { CHANNELS } from "@/realtime/channels";
@@ -13,6 +12,9 @@ import UnlockPrivateKeyModal from "./unlock-private-key";
 import { ArrowLeft } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
+import { Conversations } from "@/app/actions/chat";
+import { resolveConversationTitle } from "@/lib/utilites";
+import { cn } from "@/lib/utils";
 
 type ChatView =
   | { type: "idle" }
@@ -29,10 +31,30 @@ export default function Chat({
   const [view, setView] = useState<ChatView>({ type: "idle" });
   const privateKey = useCryptoStore((state) => state.privateKey);
 
+  const isIdle = view.type === "idle";
+
+  const activeConversation =
+    view.type === "chat"
+      ? conversations.find((c) => c.conversation.id === view.conversationId)
+      : null;
+
+  const mobileTitle =
+    view.type === "create"
+      ? "New Chat"
+      : activeConversation
+        ? resolveConversationTitle(activeConversation, userId) || "Chat"
+        : "";
+
   return (
-    <div className="flex h-screen">
-      {/* Desktop: Always show sidebar | Mobile: Show only when idle */}
-      <div className="hidden md:flex">
+    <div className="flex h-screen overflow-hidden">
+      {/* ===== SIDEBAR ===== */}
+      <div
+        className={cn(
+          "shrink-0 overflow-hidden transition-all duration-300",
+          "md:w-80", // desktop: دايماً مفتوح
+          isIdle ? "w-full" : "w-0", // mobile: كامل عند idle، مغلق غيره
+        )}
+      >
         <ChatSidebar
           currentUserId={userId}
           conversations={conversations}
@@ -46,146 +68,57 @@ export default function Chat({
         />
       </div>
 
-      {/* Mobile: Show sidebar only when idle */}
-      <div className="md:hidden">
-        {view.type === "idle" && (
-          <ChatSidebar
-            currentUserId={userId}
-            conversations={conversations}
-            activeConversationId={null}
-            setActiveConversationId={(id) =>
-              setView({ type: "chat", conversationId: id })
-            }
-            onCreateChat={() => setView({ type: "create" })}
-          />
+      {/* ===== MAIN AREA ===== */}
+      <div
+        className={cn(
+          "flex flex-col overflow-hidden transition-all duration-300",
+          "md:flex-1", // desktop: يأخذ الباقي دايماً
+          isIdle ? "w-0" : "flex-1", // mobile: مخفي عند idle، كامل غيره
         )}
-      </div>
-
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col">
+      >
         {!privateKey ? (
-          <div className="m-4 flex flex-1 flex-col rounded-lg">
+          <div className="flex flex-1 items-center justify-center p-4">
             <UnlockPrivateKeyModal open={true} onOpenChange={() => {}} />
           </div>
         ) : (
           <>
-            {/* Mobile: Show chat view with back button */}
-            <div className="md:hidden max-h-screen">
-              {view.type === "chat" && (
-                <div className="flex flex-col h-full">
-                  {/* Header with back button */}
-                  <div className="flex items-center gap-3 p-4 border-b">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setView({ type: "idle" })}
-                      className="shrink-0"
-                    >
-                      <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
-                    </Button>
-                    <div className="flex-1">
-                      <h2 className="font-semibold truncate">
-                        {(() => {
-                          const conversation = conversations.find(
-                            (c) => c.conversation.id === view.conversationId,
-                          );
-                          return conversation?.conversation.title || "Chat";
-                        })()}
-                      </h2>
-                    </div>
-                  </div>
-
-                  {/* Chat content */}
-                  <div className="flex-1">
-                    {(() => {
-                      const conversation = conversations.find(
-                        (c) => c.conversation.id === view.conversationId,
-                      );
-
-                      return conversation ? (
-                        <RealtimeProvider>
-                          <RealtimeChannel
-                            channelName={CHANNELS.CHAT(
-                              conversation.conversation.id,
-                            )}
-                          >
-                            <ChatMain
-                              conversation={conversation}
-                              currentUserId={userId}
-                              privateKey={privateKey}
-                            />
-                          </RealtimeChannel>
-                        </RealtimeProvider>
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <p className="text-muted-foreground">
-                            Conversation not found
-                          </p>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              )}
-
-              {view.type === "create" && (
-                <div className="flex flex-col h-full">
-                  {/* Header with back button */}
-                  <div className="flex items-center gap-3 p-4 border-b">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setView({ type: "idle" })}
-                      className="shrink-0"
-                    >
-                      <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
-                    </Button>
-                    <h2 className="font-semibold">New Chat</h2>
-                  </div>
-
-                  {/* Create chat form */}
-                  <div className="flex-1 p-4">
-                    <CreateChatForm
-                      onSuccess={(conversationId) =>
-                        setView({ type: "chat", conversationId })
-                      }
-                      userId={userId}
-                    />
-                  </div>
-                </div>
-              )}
+            {/* Mobile back button header */}
+            <div className="md:hidden flex items-center gap-3 border-b p-4 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setView({ type: "idle" })}
+                className="shrink-0"
+              >
+                <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
+              </Button>
+              <h2 className="font-semibold truncate">{mobileTitle}</h2>
             </div>
 
-            {/* Desktop: Show chat view normally */}
-            <div className="hidden md:flex m-4 flex-1 flex-col rounded-lg">
+            {/* Content */}
+            <div className="flex flex-1 flex-col overflow-hidden">
               {view.type === "chat" &&
-                (() => {
-                  const conversation = conversations.find(
-                    (c) => c.conversation.id === view.conversationId,
-                  );
-
-                  return conversation ? (
-                    <RealtimeProvider>
-                      <RealtimeChannel
-                        channelName={CHANNELS.CHAT(
-                          conversation.conversation.id,
-                        )}
-                      >
-                        <ChatMain
-                          conversation={conversation}
-                          currentUserId={userId}
-                          privateKey={privateKey}
-                        />
-                      </RealtimeChannel>
-                    </RealtimeProvider>
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <p className="text-muted-foreground">
-                        Conversation not found
-                      </p>
-                    </div>
-                  );
-                })()}
+                (activeConversation ? (
+                  <RealtimeProvider>
+                    <RealtimeChannel
+                      channelName={CHANNELS.CHAT(
+                        activeConversation.conversation.id,
+                      )}
+                    >
+                      <ChatMain
+                        conversation={activeConversation}
+                        currentUserId={userId}
+                        privateKey={privateKey}
+                      />
+                    </RealtimeChannel>
+                  </RealtimeProvider>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-muted-foreground">
+                      Conversation not found
+                    </p>
+                  </div>
+                ))}
 
               {view.type === "create" && (
                 <CreateChatForm
@@ -197,7 +130,7 @@ export default function Chat({
               )}
 
               {view.type === "idle" && (
-                <div className="flex h-full w-full items-center justify-center">
+                <div className="hidden md:flex h-full items-center justify-center">
                   <p className="text-muted-foreground">
                     Select a conversation to start chatting
                   </p>

@@ -253,25 +253,29 @@ export function ChatMain({
   // =========================
   // 4️⃣ تحديث آخر رسالة مقروءة
   // =========================
+  // ✅ استخدم ref عشان تتابع آخر ID قرأته محلياً بدون ما تعتمد على الـ prop
+  const lastReadRef = useRef<string | null>(conversation.lastReadMessageId);
+
   useEffect(() => {
     if (!localMessages.length) return;
 
     const lastMessage = localMessages[localMessages.length - 1];
-    if (
-      lastMessage.senderId !== currentUserId &&
-      conversation.lastReadMessageId !== lastMessage.id
-    ) {
-      updateLastReadMessage({
-        conversationId: conversation.conversation.id,
-        messageId: lastMessage.id,
-      });
-    }
-  }, [
-    localMessages,
-    currentUserId,
-    conversation.lastReadMessageId,
-    conversation.conversation.id,
-  ]);
+
+    // تجاهل رسائلك أنت
+    if (lastMessage.senderId === currentUserId) return;
+
+    // تجاهل إذا قرأناها مسبقاً (محلياً)
+    if (lastReadRef.current === lastMessage.id) return;
+
+    // حدّث الـ ref محلياً فوراً عشان ما يتكرر
+    lastReadRef.current = lastMessage.id;
+
+    updateLastReadMessage({
+      conversationId: conversation.conversation.id,
+      messageId: lastMessage.id,
+      userId: currentUserId,
+    });
+  }, [localMessages]);
 
   // =========================
   // 5️⃣ realtime
@@ -285,7 +289,10 @@ export function ChatMain({
         id: msg.id,
         content: msg.content,
         senderId: msg.senderId,
-        createdAt: new Date(msg.createdAt).toISOString(),
+        createdAt:
+          msg.createdAt && !isNaN(Date.parse(msg.createdAt))
+            ? msg.createdAt
+            : new Date().toISOString(),
       };
       addMessage(conversation.conversation.id, safeMsg);
       setLocalMessages((prev) => {
@@ -293,6 +300,7 @@ export function ChatMain({
         return [...prev, safeMsg];
       });
     },
+    currentUserId,
   });
 
   // =========================
@@ -370,16 +378,23 @@ export function ChatMain({
           </div>
         )}
 
-        {localMessages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg.content || ""}
-            name={
-              resolveConversationTitle(conversation, currentUserId) || "Unknown"
-            }
-            isUserMessage={msg.senderId === currentUserId}
-          />
-        ))}
+        {localMessages.length > 0 ? (
+          localMessages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              message={msg.content || ""}
+              name={
+                resolveConversationTitle(conversation, currentUserId) ||
+                "Unknown"
+              }
+              isUserMessage={msg.senderId === currentUserId}
+            />
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">No messages yet</p>
+          </div>
+        )}
       </div>
 
       <form
@@ -392,7 +407,7 @@ export function ChatMain({
         />
         <Input
           placeholder="Enter a message..."
-          className="flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted"
+          className="flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted h-full"
           value={text}
           autoComplete="off"
           onChange={(e) => setText(e.target.value)}
