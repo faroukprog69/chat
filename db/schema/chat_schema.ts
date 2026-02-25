@@ -97,7 +97,7 @@ export const messageAttachments = pgTable("message_attachments", {
   size: integer("size"),
 });
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelationsWithMessages = relations(user, ({ many }) => ({
   participants: many(conversationParticipants),
   messages: many(messages),
 }));
