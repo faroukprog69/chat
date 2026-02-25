@@ -15,18 +15,24 @@ import { Button } from "@/components/ui/button";
 import { Conversations } from "@/app/actions/chat";
 import { resolveConversationTitle } from "@/lib/utilites";
 import { cn } from "@/lib/utils";
+import SettingsPage from "../settings";
 
 type ChatView =
   | { type: "idle" }
   | { type: "chat"; conversationId: string }
-  | { type: "create" };
+  | { type: "create" }
+  | { type: "settings" };
 
 export default function Chat({
   conversations,
-  userId,
+  user,
 }: {
   conversations: Conversations;
-  userId: string;
+  user: {
+    id: string;
+    name: string;
+    displayName: string | null;
+  };
 }) {
   const [view, setView] = useState<ChatView>({ type: "idle" });
   const privateKey = useCryptoStore((state) => state.privateKey);
@@ -42,7 +48,7 @@ export default function Chat({
     view.type === "create"
       ? "New Chat"
       : activeConversation
-        ? resolveConversationTitle(activeConversation, userId) || "Chat"
+        ? resolveConversationTitle(activeConversation, user.id) || "Chat"
         : "";
 
   return (
@@ -56,7 +62,7 @@ export default function Chat({
         )}
       >
         <ChatSidebar
-          currentUserId={userId}
+          currentUserId={user.id}
           conversations={conversations}
           activeConversationId={
             view.type === "chat" ? view.conversationId : null
@@ -65,6 +71,7 @@ export default function Chat({
             setView({ type: "chat", conversationId: id })
           }
           onCreateChat={() => setView({ type: "create" })}
+          onSettings={() => setView({ type: "settings" })}
         />
       </div>
 
@@ -107,7 +114,7 @@ export default function Chat({
                     >
                       <ChatMain
                         conversation={activeConversation}
-                        currentUserId={userId}
+                        currentUserId={user.id}
                         privateKey={privateKey}
                       />
                     </RealtimeChannel>
@@ -125,7 +132,7 @@ export default function Chat({
                   onSuccess={(conversationId) =>
                     setView({ type: "chat", conversationId })
                   }
-                  userId={userId}
+                  userId={user.id}
                 />
               )}
 
@@ -134,6 +141,14 @@ export default function Chat({
                   <p className="text-muted-foreground">
                     Select a conversation to start chatting
                   </p>
+                </div>
+              )}
+              {view.type === "settings" && (
+                <div className="flex h-full flex-col overflow-auto">
+                  <SettingsPage
+                    name={user.name}
+                    displayName={user.displayName || ""}
+                  />
                 </div>
               )}
             </div>

@@ -125,23 +125,36 @@
   }
 }
 
-/* 1. The entire scrollbar */
-::-webkit-scrollbar {
-  width: 6px; /* Narrow width like WhatsApp */
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* 2. The background (track) */
-::-webkit-scrollbar-track {
-  background: transparent; /* Makes it look clean and integrated */
+html::-webkit-scrollbar {
+  display: none;
 }
 
-/* 3. The draggable handle (thumb) */
-::-webkit-scrollbar-thumb {
-  background: var(--color-border); /* Subtle gray color */
-  border-radius: 10px; /* Fully rounded edges */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* 4. Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border); /* Slightly darker when interacting */
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border, #d1d5db);
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border, #d1d5db);
+}
+
+html::-webkit-scrollbar {
+  width: 0px;
+  display: none;
 }

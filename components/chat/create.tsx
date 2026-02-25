@@ -89,7 +89,7 @@ export function CreateChatForm({
 
   return (
     <div
-      className={cn("flex flex-1 items-center justify-center", className)}
+      className={cn("flex flex-1 items-center justify-center p-8", className)}
       {...props}
     >
       <Card className="w-full max-w-md">

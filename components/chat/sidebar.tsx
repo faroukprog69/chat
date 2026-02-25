@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, User, Users, LogOut, Plus } from "@hugeicons/core-free-icons";
+import {
+  Search,
+  User,
+  Users,
+  LogOut,
+  Plus,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@/lib/utils";
 import { Conversations } from "@/app/actions/chat";
@@ -18,12 +25,14 @@ export function ChatSidebar({
   activeConversationId,
   setActiveConversationId,
   onCreateChat,
+  onSettings,
 }: {
   currentUserId: string;
   conversations: Conversations;
   activeConversationId: string | null;
   setActiveConversationId: (id: string) => void;
   onCreateChat: () => void;
+  onSettings: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"personal" | "groups">("personal");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -114,20 +123,35 @@ export function ChatSidebar({
         })}
       </div>
 
-      {/* Footer with logout and new chat */}
-      <div className="p-4 pt-2 space-y-2">
-        <Button className="w-full justify-start" onClick={onCreateChat}>
+      {/* Footer with settings, logout and new chat */}
+      <div className="p-4 pt-2 space-y-2 border-t bg-background/50">
+        <Button
+          className="w-full justify-start shadow-sm"
+          onClick={onCreateChat}
+        >
           <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" />
           New chat
         </Button>
+
+        {/* زر الإعدادات الجديد */}
         <Button
-          variant="outline"
-          className="w-full justify-start "
+          variant="ghost"
+          className="w-full justify-start hover:bg-muted"
+          onClick={onSettings}
+        >
+          {/* تأكد من استيراد Settings01 من المكتبة */}
+          <HugeiconsIcon icon={Settings01Icon} className="mr-2 h-4 w-4" />
+          Settings
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={handleLogout}
           disabled={isLoggingOut}
         >
           <HugeiconsIcon icon={LogOut} className="mr-2 h-4 w-4" />
-          Logout
+          {isLoggingOut ? "Logging out..." : "Logout"}
         </Button>
       </div>
     </div>

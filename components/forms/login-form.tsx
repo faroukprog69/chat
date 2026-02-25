@@ -28,6 +28,7 @@ import { deriveMasterKey } from "@/lib/crypto/deriveKey";
 import { decryptData } from "@/lib/crypto/decrypt";
 import { base64ToBuffer } from "@/lib/crypto/encoding";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "../ui/password-input";
 
 const loginSchema = z.object({
   username: z
@@ -158,31 +159,19 @@ export function LoginForm({
                 />
               </Field>
 
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                </div>
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <>
-                      <Input
-                        {...field}
-                        id="password"
-                        type="password"
-                        required
-                        aria-invalid={fieldState.invalid ? "true" : "false"}
-                      />
-                      {fieldState.invalid && (
-                        <FieldDescription className="text-red-500">
-                          {fieldState.error?.message}
-                        </FieldDescription>
-                      )}
-                    </>
-                  )}
-                />
-              </Field>
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <PasswordInput
+                    {...field}
+                    label="Password"
+                    error={errors.password?.message}
+                    showIcon={false}
+                    className="h-8"
+                  />
+                )}
+              />
 
               <Field>
                 <Button type="submit" disabled={isLoding}>

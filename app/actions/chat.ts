@@ -28,6 +28,7 @@ export async function createChatAction(data: {
   title?: string;
 }): Promise<CreateChatResult> {
   const currentUserId = data.userId;
+  console.log("CREATE CHAT ACTION");
 
   try {
     // --- حالة المحادثة المباشرة (Direct) ---
@@ -109,6 +110,7 @@ export async function createChatAction(data: {
  * جلب قائمة المحادثات للمستخدم (للسيدبار)
  */
 export async function getMyConversations(userId: string) {
+  console.log("GET MY CONVERSATIONS ACTION");
   return await db.query.conversationParticipants.findMany({
     where: eq(conversationParticipants.userId, userId),
     with: {
@@ -135,6 +137,7 @@ export async function getMessagesByConversationId(
   offset: number = 0,
   limit: number = 20,
 ) {
+  console.log("GET MESSAGES BY CONVERSATION ID ACTION");
   const messages1 = await db.query.messages.findMany({
     where: eq(messages.conversationId, conversationId),
     orderBy: desc(messages.createdAt),
@@ -150,6 +153,7 @@ export async function getOlderMessages(
   oldestMessageId: string,
   limit: number = 20,
 ) {
+  console.log("GET OLDER MESSAGES ACTION");
   const oldestMessage = await db.query.messages.findFirst({
     where: eq(messages.id, oldestMessageId),
   });

@@ -12,5 +12,5 @@ export function resolveConversationTitle(
     (p) => p.userId !== currentUserId,
   );
 
-  return other?.user?.name ?? "Unknown";
+  return other?.user?.displayName ?? "Unknown";
 }

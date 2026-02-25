@@ -12,6 +12,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  displayName: text("display_name"),
   publicKey: text("public_key"),
   encryptedPrivateKey: text("encrypted_private_key"),
   kdfSalt: text("kdf_salt"),

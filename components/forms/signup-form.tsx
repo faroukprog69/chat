@@ -31,6 +31,7 @@ import {
 import { encryptData } from "@/lib/crypto/encrypt";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "../ui/password-input";
 
 // Zod schema for validation
 const signupSchema = z
@@ -42,6 +43,7 @@ const signupSchema = z
         /^[a-zA-Z0-9_\.]+$/,
         "Username can only contain letters, numbers, underscores, and periods",
       ),
+    displayName: z.string().min(1, "Display Name is required"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -70,6 +72,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
   } = useForm<SignupFormData>({
     defaultValues: {
       name: "",
+      displayName: "",
       password: "",
       confirmPassword: "",
       inviteCode: "",
@@ -117,6 +120,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
         email: `${data.name}@internal.chat`,
         password: data.password,
         name: data.name,
+        displayName: data.displayName,
         callbackURL: "/chat",
         publicKey: JSON.stringify(publicKeyJWK),
         encryptedPrivateKey: encryptedPrivateKeyStr,
@@ -172,20 +176,18 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 )}
               />
             </Field>
-
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="displayName">Display Name</FieldLabel>
               <Controller
-                name="password"
+                name="displayName"
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <Input
                       {...field}
-                      id="password"
-                      type="password"
+                      id="displayName"
                       aria-invalid={fieldState.invalid}
-                      placeholder="Enter your password"
+                      placeholder="Enter your display name"
                     />
                     {fieldState.invalid && (
                       <FieldDescription className="text-red-500">
@@ -196,6 +198,20 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 )}
               />
             </Field>
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <PasswordInput
+                  {...field}
+                  label="Password"
+                  error={errors.password?.message}
+                  placeholder="Enter your password"
+                  showIcon={false}
+                  className="h-8"
+                />
+              )}
+            />
 
             <Field>
               <FieldLabel htmlFor="confirm-password">

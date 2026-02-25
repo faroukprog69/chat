@@ -13,5 +13,14 @@ export default async function Home() {
   }
 
   const conversations = await getMyConversations(session.user.id);
-  return <Chat conversations={conversations} userId={session.user.id} />;
+  return (
+    <Chat
+      conversations={conversations}
+      user={{
+        id: session.user.id,
+        name: session.user.name,
+        displayName: session.user.displayName,
+      }}
+    />
+  );
 }

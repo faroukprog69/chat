@@ -13,6 +13,7 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
+      displayName: { type: "string" },
       publicKey: { type: "string" },
       encryptedPrivateKey: { type: "string" },
       kdfSalt: { type: "string" },

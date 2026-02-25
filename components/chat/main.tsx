@@ -92,7 +92,7 @@ export function ChatMain({
 
     async function loadMessages() {
       const cached = getMessages(conversation.conversation.id);
-      if (cached && cached.length > 0 && mounted) {
+      if (cached) {
         setLocalMessages(cached);
         return;
       }
@@ -134,8 +134,9 @@ export function ChatMain({
 
       if (mounted) {
         setLocalMessages(filtered);
+
         setTimeout(() => {
-          setMessages(conversation.conversation.id, messagesForStore);
+          setMessages(conversation.conversation.id, messagesForStore ?? []);
         }, 0);
 
         setHasMoreMap((prev) => ({
