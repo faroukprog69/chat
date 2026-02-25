@@ -71,7 +71,7 @@ export default function UnlockPrivateKeyModal({
         "jwk",
         JSON.parse(decryptedJWKString),
         { name: "ECDH", namedCurve: "P-256" },
-        true,
+        false,
         ["deriveKey", "deriveBits"],
       );
 

@@ -123,8 +123,29 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  :root {
+    /* تعريف متغير عام للارتفاع الديناميكي */
+    --screen-height: 100vh;
+  }
+
+  /* للمتصفحات الحديثة التي تدعم dvh */
+  @supports (height: 100dvh) {
+    :root {
+      --screen-height: 100dvh;
+    }
+  }
 }
 
+/* إعادة تعريف الكلاس ليستخدم المتغير */
+.h-screen {
+  height: var(--screen-height) !important;
+}
+
+/* يفضل أيضاً عمل كلاس للـ min-height */
+.min-h-screen {
+  min-height: var(--screen-height) !important;
+}
 html {
   scrollbar-width: none;
   -ms-overflow-style: none;

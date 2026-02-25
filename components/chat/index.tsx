@@ -56,7 +56,7 @@ export default function Chat({
       {/* ===== SIDEBAR ===== */}
       <div
         className={cn(
-          "shrink-0 overflow-hidden transition-all duration-300",
+          "shrink-0 overflow-hidden transition-all duration-0",
           "md:w-80", // desktop: دايماً مفتوح
           isIdle ? "w-full" : "w-0", // mobile: كامل عند idle، مغلق غيره
         )}
@@ -78,7 +78,7 @@ export default function Chat({
       {/* ===== MAIN AREA ===== */}
       <div
         className={cn(
-          "flex flex-col overflow-hidden transition-all duration-300",
+          "flex flex-col overflow-hidden transition-all duration-0",
           "md:flex-1", // desktop: يأخذ الباقي دايماً
           isIdle ? "w-0" : "flex-1", // mobile: مخفي عند idle، كامل غيره
         )}
