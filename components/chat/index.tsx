@@ -90,7 +90,7 @@ export default function Chat({
         ) : (
           <>
             {/* Content */}
-            <div className="flex flex-1 flex-col max-h-screen">
+            <div className="flex flex-1 flex-col max-h-[100dvh]">
               {view.type === "chat" &&
                 (activeConversation ? (
                   <RealtimeProvider>
