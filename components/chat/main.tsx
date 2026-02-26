@@ -363,7 +363,7 @@ export function ChatMain({
 
   return (
     <>
-      <div className="flex items-center justify-between border border-b p-4">
+      <div className="flex items-center justify-between border border-b p-4 ">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -378,8 +378,10 @@ export function ChatMain({
               {currentChatUser.name?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="font-semibold">{currentChatUser.name}</h2>
+          <div className="min-w-0">
+            <h2 className="font-semibold truncate max-w-[160px] sm:max-w-[250px]">
+              {currentChatUser.name}
+            </h2>
           </div>
         </div>
         <DropdownMenu>
@@ -397,7 +399,7 @@ export function ChatMain({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 space-y-4 overflow-y-auto p-6 relative"
+        className="flex-1 space-y-4 overflow-y-scroll p-6 relative"
       >
         {loadingOlderMap[conversation.conversation.id] && (
           <div className="absolute top-2 left-0 right-0 flex justify-center">

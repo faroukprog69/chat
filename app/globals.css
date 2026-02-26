@@ -146,36 +146,35 @@
 .min-h-screen {
   min-height: var(--screen-height) !important;
 }
-html {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* الأساس */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(var(--muted), 0.2) transparent;
 }
 
-html::-webkit-scrollbar {
-  display: none;
+/* Dark mode */
+.dark * {
+  scrollbar-color: rgba(var(--muted), 0.16) transparent;
 }
 
+/* Chrome / Edge / Safari */
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 *::-webkit-scrollbar-track {
   background: transparent;
 }
-
 *::-webkit-scrollbar-thumb {
-  background: var(--color-border, #d1d5db);
+  background-color: var(--muted);
   border-radius: 10px;
   border: 1px solid transparent;
   background-clip: content-box;
+  transition: background-color 0.2s ease;
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border, #d1d5db);
-}
-
-html::-webkit-scrollbar {
-  width: 0px;
-  display: none;
+/* Dark mode للمتصفحات WebKit */
+.dark *::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--muted), 0.16);
 }

@@ -90,7 +90,7 @@ export default function Chat({
         ) : (
           <>
             {/* Content */}
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col max-h-screen">
               {view.type === "chat" &&
                 (activeConversation ? (
                   <RealtimeProvider>
@@ -120,6 +120,7 @@ export default function Chat({
                   onSuccess={(conversationId) =>
                     setView({ type: "chat", conversationId })
                   }
+                  onBack={() => setView({ type: "idle" })}
                   userId={user.id}
                 />
               )}
@@ -132,10 +133,11 @@ export default function Chat({
                 </div>
               )}
               {view.type === "settings" && (
-                <div className="flex h-full flex-col overflow-auto">
+                <div className="flex h-full flex-col overflow-y-scroll">
                   <SettingsPage
                     name={user.name}
                     displayName={user.displayName || ""}
+                    onBack={() => setView({ type: "idle" })}
                   />
                 </div>
               )}

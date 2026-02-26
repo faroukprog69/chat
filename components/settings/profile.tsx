@@ -20,6 +20,22 @@ import {
   LoadingIcon,
   IdentityCardIcon,
 } from "@hugeicons/core-free-icons";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const changeDisplayNameSchema = z
+  .object({
+    displayName: z
+      .string()
+      .min(1, "Display name is required")
+      .max(50, "Display name must be less than 50 characters"),
+  })
+  .refine((data) => data.displayName.length >= 2, {
+    message: "Display name must be at least 2 characters",
+    path: ["displayName"],
+  });
+
+type ChangeDisplayNameFormData = z.infer<typeof changeDisplayNameSchema>;
 
 interface Props {
   user: {
@@ -35,13 +51,14 @@ export function ProfileForm({ user }: Props) {
     control,
     handleSubmit,
     formState: { isDirty },
-  } = useForm({
+  } = useForm<ChangeDisplayNameFormData>({
+    resolver: zodResolver(changeDisplayNameSchema),
     defaultValues: {
       displayName: user.displayName ?? "",
     },
   });
 
-  const onSubmit = async (data: { displayName: string }) => {
+  const onSubmit = async (data: ChangeDisplayNameFormData) => {
     setIsLoading(true);
     const { error } = await authClient.updateUser({
       displayName: data.displayName,
@@ -53,7 +70,7 @@ export function ProfileForm({ user }: Props) {
       return;
     }
 
-    toast.success("Profile updated successfully");
+    toast.success("Display name updated successfully");
     setIsLoading(false);
   };
 
@@ -66,13 +83,11 @@ export function ProfileForm({ user }: Props) {
             <HugeiconsIcon icon={IdentityCardIcon} size={16} />
             Username
           </FieldLabel>
-          <div className="relative mt-1.5">
-            <Input
-              value={user.name}
-              disabled
-              className="bg-muted/50 border-muted-foreground/10 text-muted-foreground cursor-not-allowed h-11"
-            />
-          </div>
+          <Input
+            value={user.name}
+            disabled
+            className="bg-muted/50 border-muted-foreground/10 text-muted-foreground cursor-not-allowed h-11"
+          />
           <FieldDescription className="flex items-center gap-1.5 mt-2">
             <HugeiconsIcon icon={InformationCircleIcon} size={14} />
             Usernames are unique and cannot be changed.
@@ -80,24 +95,30 @@ export function ProfileForm({ user }: Props) {
         </Field>
 
         {/* Display Name - Editable */}
+
         <Field>
           <FieldLabel className="text-sm font-semibold flex items-center gap-2">
             <HugeiconsIcon icon={UserEditIcon} size={16} />
             Display Name
           </FieldLabel>
-          <div className="relative mt-1.5 group">
-            <Controller
-              name="displayName"
-              control={control}
-              render={({ field }) => (
+          <Controller
+            name="displayName"
+            control={control}
+            render={({ field, fieldState }) => (
+              <>
                 <Input
                   {...field}
                   placeholder="How should we call you?"
                   className="h-11 focus:ring-1 focus:ring-primary/40 transition-all"
                 />
-              )}
-            />
-          </div>
+                {fieldState.invalid && (
+                  <FieldDescription className="text-red-500">
+                    {fieldState.error?.message}
+                  </FieldDescription>
+                )}
+              </>
+            )}
+          />
           <FieldDescription>
             This is your public name shown in chats.
           </FieldDescription>

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,12 +15,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -28,6 +22,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { createChatAction } from "@/app/actions/chat";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft } from "@hugeicons/core-free-icons";
 
 const createChatSchema = z.object({
   type: z.enum(["direct", "group"]),
@@ -41,8 +37,10 @@ export function CreateChatForm({
   className,
   onSuccess,
   userId,
+  onBack,
   ...props
 }: React.ComponentProps<"div"> & {
+  onBack: () => void;
   onSuccess?: (conversationId: string) => void;
   userId: string;
 }) {
@@ -66,7 +64,6 @@ export function CreateChatForm({
 
   const handleCreate = async (data: CreateChatFormData) => {
     setIsLoading(true);
-
     try {
       const result = await createChatAction({
         ...data,
@@ -89,114 +86,124 @@ export function CreateChatForm({
 
   return (
     <div
-      className={cn("flex flex-1 items-center justify-center p-8", className)}
+      className={cn("flex flex-1 flex-col items-center  p-4 md:p-8", className)}
       {...props}
     >
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create new chat</CardTitle>
-          <CardDescription>
-            Start a new conversation or create a group chat
-          </CardDescription>
-        </CardHeader>
+      {/* Back Button للـ mobile */}
+      {onBack && (
+        <div className="self-start mb-4 md:hidden">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+      <div className="flex-1 flex items-center justify-center w-full">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Create new chat</CardTitle>
+            <CardDescription>
+              Start a new conversation or create a group chat
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit(handleCreate)}>
-            <FieldGroup>
-              {/* Chat Type */}
-              <Field>
-                <FieldLabel>Chat Type</FieldLabel>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="flex gap-4">
-                      <Button
-                        type="button"
-                        variant={
-                          field.value === "direct" ? "default" : "outline"
-                        }
-                        onClick={() => field.onChange("direct")}
-                      >
-                        Direct
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant={
-                          field.value === "group" ? "default" : "outline"
-                        }
-                        onClick={() => field.onChange("group")}
-                        disabled={true}
-                      >
-                        Group
-                      </Button>
-                    </div>
-                  )}
-                />
-              </Field>
-
-              {/* Username (Direct) */}
-              {type === "direct" && (
+          <CardContent>
+            <form onSubmit={handleSubmit(handleCreate)}>
+              <FieldGroup>
+                {/* Chat Type */}
                 <Field>
-                  <FieldLabel htmlFor="username">Username</FieldLabel>
+                  <FieldLabel>Chat Type</FieldLabel>
                   <Controller
-                    name="username"
+                    name="type"
                     control={control}
-                    render={({ field, fieldState }) => (
-                      <>
-                        <Input
-                          {...field}
-                          id="username"
-                          placeholder="Enter username"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && (
-                          <FieldDescription className="text-red-500">
-                            {fieldState.error?.message}
-                          </FieldDescription>
-                        )}
-                      </>
+                    render={({ field }) => (
+                      <div className="flex gap-4">
+                        <Button
+                          type="button"
+                          variant={
+                            field.value === "direct" ? "default" : "outline"
+                          }
+                          onClick={() => field.onChange("direct")}
+                        >
+                          Direct
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant={
+                            field.value === "group" ? "default" : "outline"
+                          }
+                          onClick={() => field.onChange("group")}
+                          disabled={true}
+                        >
+                          Group
+                        </Button>
+                      </div>
                     )}
                   />
                 </Field>
-              )}
 
-              {/* Title (Group) */}
-              {type === "group" && (
+                {/* Username (Direct) */}
+                {type === "direct" && (
+                  <Field>
+                    <FieldLabel htmlFor="username">Username</FieldLabel>
+                    <Controller
+                      name="username"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <>
+                          <Input
+                            {...field}
+                            id="username"
+                            placeholder="Enter username"
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldDescription className="text-red-500">
+                              {fieldState.error?.message}
+                            </FieldDescription>
+                          )}
+                        </>
+                      )}
+                    />
+                  </Field>
+                )}
+
+                {/* Title (Group) */}
+                {type === "group" && (
+                  <Field>
+                    <FieldLabel htmlFor="title">Group Title</FieldLabel>
+                    <Controller
+                      name="title"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <>
+                          <Input
+                            {...field}
+                            id="title"
+                            placeholder="Enter group name"
+                            aria-invalid={fieldState.invalid}
+                          />
+                          {fieldState.invalid && (
+                            <FieldDescription className="text-red-500">
+                              {fieldState.error?.message}
+                            </FieldDescription>
+                          )}
+                        </>
+                      )}
+                    />
+                  </Field>
+                )}
+
                 <Field>
-                  <FieldLabel htmlFor="title">Group Title</FieldLabel>
-                  <Controller
-                    name="title"
-                    control={control}
-                    render={({ field, fieldState }) => (
-                      <>
-                        <Input
-                          {...field}
-                          id="title"
-                          placeholder="Enter group name"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        {fieldState.invalid && (
-                          <FieldDescription className="text-red-500">
-                            {fieldState.error?.message}
-                          </FieldDescription>
-                        )}
-                      </>
-                    )}
-                  />
+                  <Button type="submit" disabled={isLoading} className="w-full">
+                    {isLoading ? "Creating..." : "Create Chat"}
+                  </Button>
                 </Field>
-              )}
-
-              <Field>
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? "Creating..." : "Create Chat"}
-                </Button>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
