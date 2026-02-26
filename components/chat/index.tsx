@@ -89,19 +89,6 @@ export default function Chat({
           </div>
         ) : (
           <>
-            {/* Mobile back button header */}
-            <div className="md:hidden flex items-center gap-3 border-b p-4 shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setView({ type: "idle" })}
-                className="shrink-0"
-              >
-                <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
-              </Button>
-              <h2 className="font-semibold truncate">{mobileTitle}</h2>
-            </div>
-
             {/* Content */}
             <div className="flex flex-1 flex-col overflow-hidden">
               {view.type === "chat" &&

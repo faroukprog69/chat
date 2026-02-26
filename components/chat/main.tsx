@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  ArrowLeft,
   ArrowRight,
   ImageIcon,
   MoreVertical,
@@ -362,9 +363,16 @@ export function ChatMain({
 
   return (
     <>
-      {/* Hide header on mobile - it's handled by parent component */}
-      <div className="hidden md:flex items-center justify-between border border-b p-4">
+      <div className="flex items-center justify-between border border-b p-4">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setView({ type: "idle" })}
+            className="shrink-0 md:hidden"
+          >
+            <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
+          </Button>
           <Avatar className="h-10 w-10">
             <AvatarFallback>
               {currentChatUser.name?.charAt(0) || "U"}
