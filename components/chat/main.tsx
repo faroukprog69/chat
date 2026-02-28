@@ -71,11 +71,87 @@ import { LocalMessage } from "@/app/data/chat/chat-dto";
 import { useCryptoStore } from "@/store/useCryptoStore";
 import { useRouter } from "next/navigation";
 import { Textarea } from "../ui/textarea";
+import { useLongPress } from "@/hooks/long-press";
 
 // ─────────────────────────────────────────────
-// Types
+// MessageActions
 // ─────────────────────────────────────────────
+interface MessageActionsProps {
+  isOwn: boolean;
+  message: LocalMessage;
+  onEditClick: (msg: LocalMessage) => void;
+  onDeleteClick: (id: string) => void;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}
 
+function MessageActions({
+  isOwn,
+  message,
+  onEditClick,
+  onDeleteClick,
+  open,
+  setOpen,
+}: MessageActionsProps) {
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 rounded-full"
+          />
+        }
+      >
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
+          className="h-3.5 w-3.5 text-muted-foreground"
+        />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align={isOwn ? "end" : "start"}
+        className="min-w-[120px]"
+      >
+        <DropdownMenuItem
+          onClick={() => {
+            navigator.clipboard.writeText(message.content || "");
+            setOpen(false);
+          }}
+        >
+          <HugeiconsIcon icon={Copy01Icon} className="h-4 w-4" />
+          Copy
+        </DropdownMenuItem>
+
+        {isOwn && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                onEditClick(message);
+                setOpen(false);
+              }}
+            >
+              <HugeiconsIcon icon={Edit01Icon} className="h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => {
+                onDeleteClick(message.id);
+                setOpen(false);
+              }}
+              className="text-destructive"
+            >
+              <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 // ─────────────────────────────────────────────
 // MessageBubble
 // ─────────────────────────────────────────────
@@ -104,215 +180,83 @@ const MessageBubble = ({
   onEditClick,
 }: MessageBubbleProps) => {
   const [hovered, setHovered] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
-  const handleTouchStart = () => {
-    longPressTimer.current = setTimeout(() => {
-      setDropdownOpen(true);
-    }, 500);
-  };
+  // 🔥 Long Press → Open Dropdown
+  const longPressHandlers = useLongPress(() => {
+    if (!selectionMode) {
+      setActionsOpen(true);
+    }
+  });
 
-  const handleTouchEnd = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-  };
-
-  const handleBubbleClick = () => {
-    if (selectionMode) onSelect(message.id);
-  };
+  const bubbleClasses = cn(
+    "w-full rounded-2xl px-4 py-2.5 select-none",
+    isUserMessage
+      ? "bg-primary text-primary-foreground rounded-br-sm"
+      : "bg-muted rounded-bl-sm",
+  );
 
   return (
     <div
       className={cn(
-        "flex items-start gap-2 group transition-colors duration-150 rounded-lg px-1",
+        "flex items-start gap-2 group rounded-lg px-1 transition",
         isUserMessage ? "justify-end" : "justify-start",
-        selectionMode && isSelected ? "dark:bg-muted/10 bg-muted/50 py-2" : "",
-        selectionMode ? "cursor-pointer" : "",
+        selectionMode && "cursor-pointer",
+        selectionMode && isSelected && "bg-muted/40 py-2",
       )}
+      {...longPressHandlers}
+      onClick={(e) => {
+        longPressHandlers.onClick(e);
+        if (selectionMode) onSelect(message.id);
+      }}
+      onTouchStart={(e) => {
+        // إذا القائمة مفتوحة، لا تسمح للـ Hook بالبدء
+        if (actionsOpen) return;
+        longPressHandlers.onTouchStart(e);
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={handleBubbleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchEnd}
     >
-      {/* Checkbox (selection mode) */}
-      {selectionMode && (
-        <div
-          className={cn(
-            "flex items-center self-center shrink-0",
-            isUserMessage ? "order-last ml-2" : "order-first mr-2",
-          )}
-        >
-          <div
-            className={cn(
-              "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-              isSelected
-                ? "bg-primary border-primary"
-                : "border-muted-foreground",
-            )}
-          >
-            {isSelected && (
-              <HugeiconsIcon icon={Tick01Icon} className="w-3 h-3 text-white" />
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Avatar (opponent only) */}
-      {!isUserMessage && !selectionMode && (
+      {/* Avatar */}
+      {!isUserMessage && (
         <Avatar className="h-8 w-8 shrink-0 self-end">
           <AvatarFallback>{name.charAt(0)}</AvatarFallback>
         </Avatar>
       )}
-      {!isUserMessage && selectionMode && (
-        <Avatar className="h-8 w-8 shrink-0 self-end opacity-60">
-          <AvatarFallback>{name.charAt(0)}</AvatarFallback>
-        </Avatar>
-      )}
 
-      {/* Bubble + dropdown arrow */}
-      <div
-        className={cn(
-          "flex items-end gap-1",
-          isUserMessage ? "flex-row-reverse" : "flex-row",
-        )}
-      >
-        {/* Dropdown arrow — desktop hover, only for own messages */}
-        {isUserMessage && !selectionMode && (
+      <div className={cn("flex items-end gap-1 flex-row-reverse")}>
+        {/* ✅ Actions موجود دائماً لكن مخفي */}
+        {!selectionMode && (
           <div
             className={cn(
-              "self-center transition-opacity duration-150 shrink-0",
+              "transition-opacity duration-150",
               hovered ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
           >
-            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full hover:bg-muted"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                }
-              >
-                <HugeiconsIcon
-                  icon={ArrowDown01Icon}
-                  className="h-3.5 w-3.5 text-muted-foreground"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align={isUserMessage ? "end" : "start"}
-                className="min-w-[120px] mt-2"
-              >
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(message.content || "");
-                  }}
-                >
-                  <HugeiconsIcon icon={Copy01Icon} className="h-4 w-4" />
-                  Copy
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditClick(message);
-                  }}
-                  className="gap-2 cursor-pointer"
-                >
-                  <HugeiconsIcon icon={Edit01Icon} className="h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteClick(message.id);
-                  }}
-                  className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-                >
-                  <HugeiconsIcon icon={Delete01Icon} className="h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <MessageActions
+              isOwn={isUserMessage}
+              message={message}
+              onEditClick={onEditClick}
+              onDeleteClick={onDeleteClick}
+              open={actionsOpen}
+              setOpen={setActionsOpen}
+            />
           </div>
         )}
 
-        {/* Bubble itself */}
-        <div
-          className={cn(
-            "w-full rounded-2xl px-4 py-2.5 select-none",
-            isUserMessage
-              ? "bg-primary text-primary-foreground rounded-br-sm"
-              : "bg-muted rounded-bl-sm",
-          )}
-        >
+        {/* Bubble */}
+        <div className={bubbleClasses}>
           {message.deletedAt ? (
-            <p
-              className={`text-sm italic ${isUserMessage ? "text-white/70" : "text-muted-foreground"}`}
-            >
-              message deleted
-            </p>
+            <p className="text-sm italic opacity-70">message deleted</p>
           ) : (
             <>
-              <p className="text-sm ">{message.content}</p>
+              <p className="text-sm">{message.content}</p>
               {message.editedAt && (
-                <p
-                  className={cn(
-                    "text-[10px] mt-0.5",
-                    isUserMessage
-                      ? "text-primary-foreground/60"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  edited
-                </p>
+                <p className="text-[10px] opacity-60 mt-1">edited</p>
               )}
             </>
           )}
         </div>
-        {!isUserMessage && !selectionMode && (
-          <div
-            className={cn(
-              "self-center transition-opacity duration-150 shrink-0",
-              hovered ? "opacity-100" : "opacity-0 pointer-events-none",
-            )}
-          >
-            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full hover:bg-muted"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                }
-              >
-                <HugeiconsIcon
-                  icon={ArrowDown01Icon}
-                  className="h-3.5 w-3.5 text-muted-foreground"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align={isUserMessage ? "end" : "start"}
-                className="min-w-[120px] mt-2"
-              >
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    navigator.clipboard.writeText(message.content || "");
-                    setDropdownOpen(false);
-                  }}
-                >
-                  <HugeiconsIcon icon={Copy01Icon} className="h-4 w-4" />
-                  Copy
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -324,7 +268,7 @@ const MessageBubble = ({
 interface ChatMainProps {
   currentUserId: string;
   conversation: ConversationParticipantEntry;
-  initialRawMessages?: LocalMessage[];
+  initialRawMessages: LocalMessage[];
 }
 
 export function ChatMain({
