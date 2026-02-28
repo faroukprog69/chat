@@ -2,6 +2,9 @@
 import { ChatDal } from "@/app/data/chat/chat-dal";
 import { createChatSchema, LocalMessage } from "@/app/data/chat/chat-dto";
 import { revalidatePath } from "next/cache";
+import { sendPushNotification } from "@/lib/send-push";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 /**
  * إنشاء محادثة جديدة
@@ -31,10 +34,45 @@ export async function sendMessageAction(payload: {
   conversationId: string;
   ciphertext: string;
   iv: string;
+  plainContent: string;
 }) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized" };
+    }
+
     const chatDal = await ChatDal.create();
     const result = await chatDal.sendMessage(payload);
+
+    // Send push notifications to receivers
+    const conversation = await chatDal.getConversationById(
+      payload.conversationId,
+    );
+    if (conversation) {
+      const sender = conversation.conversation.participants.find(
+        (p) => p.userId === session.user.id,
+      );
+      const senderName = sender?.user?.displayName || "Someone";
+      const receivers = conversation.conversation.participants.filter(
+        (p) => p.userId !== session.user.id,
+      );
+
+      console.log(
+        `📤 Sending push to ${receivers.length} receivers:`,
+        receivers.map((r) => r.userId),
+      );
+
+      for (const receiver of receivers) {
+        console.log(`🚀 Sending push to user: ${receiver.userId}`);
+        await sendPushNotification(receiver.userId, {
+          title: "New message",
+          body: `${senderName}: ${payload.plainContent.substring(0, 100)}`,
+          url: `/chat/${payload.conversationId}`,
+        });
+      }
+    }
+
     // revalidatePath(`/chat/${payload.conversationId}`);
     return { success: true, messageId: result.messageId };
   } catch (error: any) {

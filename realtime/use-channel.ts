@@ -94,7 +94,12 @@ export function useChatChannel({
     };
 
     // persist
-    const dbResult = await sendMessageAction(payload);
+    const dbResult = await sendMessageAction({
+      conversationId: data.conversationId,
+      ciphertext: bufferToBase64(encrypted.ciphertext),
+      iv: bufferToBase64(encrypted.iv.buffer),
+      plainContent: data.content || "",
+    });
 
     if (!dbResult.success) {
       console.error("Failed to save message:", dbResult.error);

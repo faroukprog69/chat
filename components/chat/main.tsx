@@ -72,6 +72,7 @@ import { useCryptoStore } from "@/store/useCryptoStore";
 import { useRouter } from "next/navigation";
 import { Textarea } from "../ui/textarea";
 import { useLongPress } from "@/hooks/long-press";
+import { usePushSetup } from "@/hooks/use-push-setup";
 
 // ─────────────────────────────────────────────
 // MessageActions
@@ -281,6 +282,7 @@ export function ChatMain({
 
   const [localMessages, setLocalMessages] = useState<LocalMessage[]>([]);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [loadingOlderMap, setLoadingOlderMap] = useState<
@@ -565,30 +567,35 @@ export function ChatMain({
   // =========================
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim()) return;
-    setText("");
+    if (!text.trim() || sending) return;
+    setSending(true);
 
-    const newMessage: LocalMessage = {
-      id: crypto.randomUUID(),
-      content: text,
-      senderId: currentUserId,
-      conversationId: conversation.conversation.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      type: "text",
-      iv: null,
-      replyToMessageId: null,
-      editedAt: null,
-      deletedAt: null,
-    };
+    try {
+      const newMessage: LocalMessage = {
+        id: crypto.randomUUID(),
+        content: text,
+        senderId: currentUserId,
+        conversationId: conversation.conversation.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        type: "text",
+        iv: null,
+        replyToMessageId: null,
+        editedAt: null,
+        deletedAt: null,
+      };
 
-    addMessage(conversation.conversation.id, newMessage);
-    setLocalMessages((prev) => {
-      const updated = [...prev, newMessage];
-      setTimeout(() => setMessages(conversation.conversation.id, updated), 0);
-      return updated;
-    });
-    await sendMessage(newMessage);
+      addMessage(conversation.conversation.id, newMessage);
+      setLocalMessages((prev) => {
+        const updated = [...prev, newMessage];
+        setTimeout(() => setMessages(conversation.conversation.id, updated), 0);
+        return updated;
+      });
+      await sendMessage(newMessage);
+      setText("");
+    } finally {
+      setSending(false);
+    }
   };
 
   // =========================
@@ -827,7 +834,6 @@ export function ChatMain({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       {/* ── Messages ── */}
       <div
         ref={scrollContainerRef}
@@ -901,9 +907,13 @@ export function ChatMain({
           size="icon"
           className="rounded-full shrink-0"
           type="submit"
-          disabled={selectionMode || !text.trim()}
+          disabled={selectionMode || !text.trim() || sending}
         >
-          <HugeiconsIcon icon={ArrowRight} />
+          {sending ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          ) : (
+            <HugeiconsIcon icon={ArrowRight} />
+          )}
         </Button>
       </form>
 

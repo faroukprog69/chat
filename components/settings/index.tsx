@@ -1,5 +1,4 @@
 "use client";
-
 import { ChangePasswordForm } from "@/components/settings/change-password";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileForm } from "./profile";
@@ -19,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { AppearanceForm } from "./appearance";
 import { useCryptoStore } from "@/store/useCryptoStore";
 import { DeleteAccountSection } from "./delete-account";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -180,38 +180,47 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
           {/* ===== NOTIFICATIONS TAB ===== */}
-          <TabsContent value="notifications" className="mt-0">
-            <div className="border rounded-2xl shadow-sm bg-card">
-              <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 px-6">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                    <HugeiconsIcon
-                      icon={Notification03Icon}
-                      className="w-8 h-8 text-primary"
-                    />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border flex items-center justify-center">
-                    <HugeiconsIcon
-                      icon={Clock01Icon}
-                      className="w-3 h-3 text-primary"
-                    />
-                  </div>
+          {/* ===== NOTIFICATIONS TAB ===== */}
+          <TabsContent
+            value="notifications"
+            className="mt-0 focus-visible:outline-none"
+          >
+            <div className="bg-card border rounded-2xl shadow-sm">
+              {/* Header — نفس نمط باقي التبويبات */}
+              <div className="px-6 py-5 border-b bg-muted/20 flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <HugeiconsIcon icon={Notification03Icon} size={20} />
                 </div>
-
-                <div className="space-y-1.5 max-w-sm">
-                  <h3 className="text-lg font-semibold">
-                    Notifications Coming Soon
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    We're building a powerful notification system. You'll be
-                    able to control email alerts, push notifications, and sound
-                    preferences.
+                <div>
+                  <h3 className="font-semibold">Push Notifications</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Manage push notifications for new messages.
                   </p>
                 </div>
+              </div>
 
-                <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  In Development
-                </span>
+              {/* Body */}
+              <div className="p-6">
+                <PushNotificationManager />
+              </div>
+            </div>
+
+            {/* Info banner — مشابه للـ warning في Security */}
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 mt-4">
+              <div className="flex gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+                  <HugeiconsIcon icon={Clock01Icon} size={20} />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                    Stay in the loop
+                  </h4>
+                  <p className="text-sm text-blue-700/70 dark:text-blue-400/70 leading-relaxed">
+                    Enable push notifications to get instant alerts for new
+                    messages, even when the app is in the background. You can
+                    disable this anytime.
+                  </p>
+                </div>
               </div>
             </div>
           </TabsContent>
