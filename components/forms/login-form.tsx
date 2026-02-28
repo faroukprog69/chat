@@ -70,7 +70,7 @@ export function LoginForm({
 
     try {
       const { data: signInData, error } = await authClient.signIn.email({
-        email: `${username}@internal.chat`,
+        email: `${username.toLowerCase()}@internal.chat`,
         password,
       });
 

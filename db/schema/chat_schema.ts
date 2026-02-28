@@ -5,6 +5,7 @@ import {
   integer,
   index,
   uniqueIndex,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { InferSelectModel, relations, sql } from "drizzle-orm";
 import { user } from "./auth_schema";
@@ -78,10 +79,12 @@ export const messages = pgTable(
 
     replyToMessageId: text("reply_to_message_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    editedAt: timestamp("edited_at")
+    updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
+
+    editedAt: timestamp("edited_at"),
     deletedAt: timestamp("deleted_at"),
   },
   (table) => [index("messages_conversation_idx").on(table.conversationId)],

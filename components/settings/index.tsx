@@ -7,31 +7,33 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft,
   Clock01Icon,
+  DashboardSquare02Icon,
   Notification03Icon,
   ShieldKeyIcon,
   UserEdit01Icon,
   UserShield01Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "../ui/button";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { AppearanceForm } from "./appearance";
+import { useCryptoStore } from "@/store/useCryptoStore";
+import { DeleteAccountSection } from "./delete-account";
 
-export default function SettingsPage({
-  name,
-  displayName,
-  onBack,
-}: {
-  name: string;
-  displayName: string;
-  onBack: () => void;
-}) {
+export default function SettingsPage() {
+  const router = useRouter();
+  const name = useCryptoStore((state) => state.name);
+  const displayName = useCryptoStore((state) => state.displayName);
+
   return (
-    <div className="w-full p-4 md:p-8">
+    <div className="w-full p-4 md:p-8 min-h-screen overflow-y-auto">
       <div className="max-w-3xl mx-auto space-y-8">
         {/* ===== HEADER ===== */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            onClick={onBack}
+            onClick={() => router.push("/chat")}
             className="shrink-0 md:hidden"
           >
             <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
@@ -47,7 +49,7 @@ export default function SettingsPage({
         {/* ===== TABS ===== */}
         <Tabs defaultValue="profile" className="space-y-6">
           {/* Tabs Navigation */}
-          <TabsList className="w-full justify-start bg-muted/40 p-1 rounded-lg h-[36px]!">
+          <TabsList className="w-full justify-start bg-muted/40 p-1 rounded-lg min-h-[36px]! h-full! grid grid-cols-2 md:grid-cols-4">
             <TabsTrigger
               value="profile"
               className="px-4 py-2 rounded-md transition-all 
@@ -66,6 +68,14 @@ export default function SettingsPage({
               Security
             </TabsTrigger>
 
+            <TabsTrigger
+              value="appearance"
+              className="px-4 py-2 rounded-md transition-all 
+              data-[state=active]:bg-background 
+              data-[state=active]:shadow-sm"
+            >
+              Appearance
+            </TabsTrigger>
             <TabsTrigger
               value="notifications"
               className="px-4 py-2 rounded-md transition-all 
@@ -94,7 +104,12 @@ export default function SettingsPage({
                 </div>
               </div>
               <div className="p-6">
-                <ProfileForm user={{ name, displayName }} />
+                <ProfileForm
+                  user={{
+                    name,
+                    displayName,
+                  }}
+                />
               </div>
             </div>
           </TabsContent>
@@ -120,6 +135,7 @@ export default function SettingsPage({
               <div className="p-6">
                 <ChangePasswordForm />
               </div>
+              <DeleteAccountSection />
             </div>
 
             {/* Warning — مرة وحدة بس */}
@@ -142,7 +158,27 @@ export default function SettingsPage({
               </div>
             </div>
           </TabsContent>
-
+          <TabsContent
+            value="appearance"
+            className="mt-0 focus-visible:outline-none"
+          >
+            <div className="bg-card border rounded-2xl shadow-sm">
+              <div className="px-6 py-5 border-b bg-muted/20 flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <HugeiconsIcon icon={DashboardSquare02Icon} size={20} />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Appearance</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose your theme and layout preferences.
+                  </p>
+                </div>
+              </div>
+              <div className="p-6">
+                <AppearanceForm />
+              </div>
+            </div>
+          </TabsContent>
           {/* ===== NOTIFICATIONS TAB ===== */}
           <TabsContent value="notifications" className="mt-0">
             <div className="border rounded-2xl shadow-sm bg-card">

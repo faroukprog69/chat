@@ -19,6 +19,9 @@ export const auth = betterAuth({
       encryptedPrivateKey: { type: "string" },
       kdfSalt: { type: "string" },
     },
+    deleteUser: {
+      enabled: true,
+    },
   },
 
   plugins: [nextCookies()],

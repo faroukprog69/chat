@@ -2,208 +2,118 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { createChatAction } from "@/app/actions/chat";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft } from "@hugeicons/core-free-icons";
 
-const createChatSchema = z.object({
-  type: z.enum(["direct", "group"]),
-  title: z.string().optional(),
-  username: z.string().optional(),
-});
+type CreateChatFormData = {
+  type: "direct" | "group";
+  username?: string;
+  title?: string;
+};
 
-type CreateChatFormData = z.infer<typeof createChatSchema>;
-
-export function CreateChatForm({
-  className,
-  onSuccess,
-  userId,
-  onBack,
-  ...props
-}: React.ComponentProps<"div"> & {
-  onBack: () => void;
-  onSuccess?: (conversationId: string) => void;
-  userId: string;
-}) {
+export function CreateChatForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<CreateChatFormData>({
+  const { control, handleSubmit, watch } = useForm<CreateChatFormData>({
     defaultValues: {
       type: "direct",
-      title: "",
       username: "",
+      title: "",
     },
-    resolver: zodResolver(createChatSchema),
   });
 
-  const type = watch("type");
+  const chatType = watch("type");
 
   const handleCreate = async (data: CreateChatFormData) => {
+    // ✅ تحقق بسيط يدوي
+    if (data.type === "direct" && !data.username?.trim()) {
+      toast.error("Username is required");
+      return;
+    }
+
+    if (data.type === "group" && !data.title?.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const result = await createChatAction({
-        ...data,
-        userId,
-      });
+      const result = await createChatAction(data);
 
-      if (!result.success) {
-        toast.error(result.error);
+      if (!result?.success) {
+        toast.error(result?.error || "Failed to create chat");
         return;
       }
 
-      toast.success("Chat ready!");
-      onSuccess?.(result.conversationId);
+      toast.success("Chat created successfully!");
+      router.push(`/chat/${result.conversationId}`);
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error("Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className={cn("flex flex-1 flex-col items-center  p-4 md:p-8", className)}
-      {...props}
-    >
-      {/* Back Button للـ mobile */}
-      {onBack && (
-        <div className="self-start mb-4 md:hidden">
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
-      <div className="flex-1 flex items-center justify-center w-full">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Create new chat</CardTitle>
-            <CardDescription>
-              Start a new conversation or create a group chat
-            </CardDescription>
-          </CardHeader>
+    <form onSubmit={handleSubmit(handleCreate)}>
+      <FieldGroup className="space-y-6">
+        <Field>
+          <FieldLabel>Chat Type</FieldLabel>
+          <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <Button
+                  type="button"
+                  variant={field.value === "direct" ? "default" : "ghost"}
+                  className="flex-1"
+                  onClick={() => field.onChange("direct")}
+                >
+                  Direct
+                </Button>
 
-          <CardContent>
-            <form onSubmit={handleSubmit(handleCreate)}>
-              <FieldGroup>
-                {/* Chat Type */}
-                <Field>
-                  <FieldLabel>Chat Type</FieldLabel>
-                  <Controller
-                    name="type"
-                    control={control}
-                    render={({ field }) => (
-                      <div className="flex gap-4">
-                        <Button
-                          type="button"
-                          variant={
-                            field.value === "direct" ? "default" : "outline"
-                          }
-                          onClick={() => field.onChange("direct")}
-                        >
-                          Direct
-                        </Button>
+                <Button
+                  type="button"
+                  variant={field.value === "group" ? "default" : "ghost"}
+                  className="flex-1"
+                  disabled
+                  onClick={() => field.onChange("group")}
+                >
+                  Group
+                </Button>
+              </div>
+            )}
+          />
+        </Field>
 
-                        <Button
-                          type="button"
-                          variant={
-                            field.value === "group" ? "default" : "outline"
-                          }
-                          onClick={() => field.onChange("group")}
-                          disabled={true}
-                        >
-                          Group
-                        </Button>
-                      </div>
-                    )}
-                  />
-                </Field>
+        {chatType === "direct" && (
+          <Field>
+            <FieldLabel>Recipient Username</FieldLabel>
+            <Controller
+              name="username"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder="e.g. ahmad_123"
+                  autoComplete="off"
+                />
+              )}
+            />
+          </Field>
+        )}
 
-                {/* Username (Direct) */}
-                {type === "direct" && (
-                  <Field>
-                    <FieldLabel htmlFor="username">Username</FieldLabel>
-                    <Controller
-                      name="username"
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <>
-                          <Input
-                            {...field}
-                            id="username"
-                            placeholder="Enter username"
-                            aria-invalid={fieldState.invalid}
-                          />
-                          {fieldState.invalid && (
-                            <FieldDescription className="text-red-500">
-                              {fieldState.error?.message}
-                            </FieldDescription>
-                          )}
-                        </>
-                      )}
-                    />
-                  </Field>
-                )}
-
-                {/* Title (Group) */}
-                {type === "group" && (
-                  <Field>
-                    <FieldLabel htmlFor="title">Group Title</FieldLabel>
-                    <Controller
-                      name="title"
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <>
-                          <Input
-                            {...field}
-                            id="title"
-                            placeholder="Enter group name"
-                            aria-invalid={fieldState.invalid}
-                          />
-                          {fieldState.invalid && (
-                            <FieldDescription className="text-red-500">
-                              {fieldState.error?.message}
-                            </FieldDescription>
-                          )}
-                        </>
-                      )}
-                    />
-                  </Field>
-                )}
-
-                <Field>
-                  <Button type="submit" disabled={isLoading} className="w-full">
-                    {isLoading ? "Creating..." : "Create Chat"}
-                  </Button>
-                </Field>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        <Button type="submit" disabled={isLoading} className="w-full h-11">
+          {isLoading ? "Creating..." : "Start Chat"}
+        </Button>
+      </FieldGroup>
+    </form>
   );
 }

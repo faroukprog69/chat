@@ -22,6 +22,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCryptoStore } from "@/store/useCryptoStore";
 
 const changeDisplayNameSchema = z
   .object({
@@ -46,6 +47,7 @@ interface Props {
 
 export function ProfileForm({ user }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const setDisplayName = useCryptoStore((s) => s.setDisplayName);
 
   const {
     control,
@@ -72,6 +74,7 @@ export function ProfileForm({ user }: Props) {
 
     toast.success("Display name updated successfully");
     setIsLoading(false);
+    setDisplayName(data.displayName);
   };
 
   return (

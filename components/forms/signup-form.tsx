@@ -119,7 +119,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
       const user = await authClient.signUp.email({
         email: `${data.name}@internal.chat`,
         password: data.password,
-        name: data.name,
+        name: data.name.toLowerCase(),
         displayName: data.displayName,
         callbackURL: "/chat",
         publicKey: JSON.stringify(publicKeyJWK),

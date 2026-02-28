@@ -31,6 +31,8 @@ export default function UnlockPrivateKeyModal({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const setPrivateKey = useCryptoStore((s) => s.setPrivateKey);
+  const setName = useCryptoStore((s) => s.setName);
+  const setDisplayName = useCryptoStore((s) => s.setDisplayName);
 
   async function handleUnlock() {
     if (!password) {
@@ -76,6 +78,8 @@ export default function UnlockPrivateKeyModal({
       );
 
       setPrivateKey(privateKey);
+      setName(res.data.user.name);
+      setDisplayName(res.data.user.displayName);
 
       toast.success("Private key unlocked!");
       setPassword("");
