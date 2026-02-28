@@ -13,6 +13,7 @@ export default async function Page({ params }: PageProps) {
   const { id } = await params;
   const conversationDal = await ChatDal.create();
   const conversationById = await conversationDal.getConversationById(id);
+  const rawMessages = await conversationDal.getMessages(id, 20); // load initial 20 messages
   let user = conversationDal.getCurrentUser();
   return (
     <PrivateKeyNeed>
@@ -20,7 +21,11 @@ export default async function Page({ params }: PageProps) {
         <RealtimeChannel
           channelName={CHANNELS.CHAT(conversationById!.conversation.id)}
         >
-          <ChatMain currentUserId={user.id} conversation={conversationById!} />
+          <ChatMain
+            currentUserId={user.id}
+            conversation={conversationById!}
+            initialRawMessages={rawMessages}
+          />
         </RealtimeChannel>
       </RealtimeProvider>
     </PrivateKeyNeed>

@@ -47,6 +47,7 @@ import {
   CheckmarkCircle02Icon,
   ArrowDown01Icon,
   Tick02Icon,
+  Copy01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@/lib/utils";
@@ -90,7 +91,6 @@ interface MessageBubbleProps {
   onDeleteClick: (id: string) => void;
   onEditClick: (msg: LocalMessage) => void;
   // Long press (mobile)
-  onLongPress: (id: string) => void;
 }
 
 const MessageBubble = ({
@@ -102,14 +102,14 @@ const MessageBubble = ({
   onSelect,
   onDeleteClick,
   onEditClick,
-  onLongPress,
 }: MessageBubbleProps) => {
   const [hovered, setHovered] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleTouchStart = () => {
     longPressTimer.current = setTimeout(() => {
-      onLongPress(message.id);
+      setDropdownOpen(true);
     }, 500);
   };
 
@@ -186,7 +186,7 @@ const MessageBubble = ({
               hovered ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
           >
-            <DropdownMenu>
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger
                 render={
                   <Button
@@ -204,8 +204,17 @@ const MessageBubble = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align={isUserMessage ? "end" : "start"}
-                className="min-w-[120px]"
+                className="min-w-[120px] mt-2"
               >
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(message.content || "");
+                  }}
+                >
+                  <HugeiconsIcon icon={Copy01Icon} className="h-4 w-4" />
+                  Copy
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
@@ -234,7 +243,7 @@ const MessageBubble = ({
         {/* Bubble itself */}
         <div
           className={cn(
-            "w-full rounded-2xl px-4 py-2.5",
+            "w-full rounded-2xl px-4 py-2.5 select-none",
             isUserMessage
               ? "bg-primary text-primary-foreground rounded-br-sm"
               : "bg-muted rounded-bl-sm",
@@ -264,6 +273,46 @@ const MessageBubble = ({
             </>
           )}
         </div>
+        {!isUserMessage && !selectionMode && (
+          <div
+            className={cn(
+              "self-center transition-opacity duration-150 shrink-0",
+              hovered ? "opacity-100" : "opacity-0 pointer-events-none",
+            )}
+          >
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-full hover:bg-muted"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                }
+              >
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  className="h-3.5 w-3.5 text-muted-foreground"
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align={isUserMessage ? "end" : "start"}
+                className="min-w-[120px] mt-2"
+              >
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    navigator.clipboard.writeText(message.content || "");
+                    setDropdownOpen(false);
+                  }}
+                >
+                  <HugeiconsIcon icon={Copy01Icon} className="h-4 w-4" />
+                  Copy
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -275,9 +324,14 @@ const MessageBubble = ({
 interface ChatMainProps {
   currentUserId: string;
   conversation: ConversationParticipantEntry;
+  initialRawMessages?: LocalMessage[];
 }
 
-export function ChatMain({ currentUserId, conversation }: ChatMainProps) {
+export function ChatMain({
+  currentUserId,
+  conversation,
+  initialRawMessages,
+}: ChatMainProps) {
   const privateKey = useCryptoStore((state) => state.privateKey);
   const router = useRouter();
 
@@ -329,7 +383,12 @@ export function ChatMain({ currentUserId, conversation }: ChatMainProps) {
   useEffect(() => {
     let mounted = true;
     async function loadMessages() {
-      const msgs = await getMessagesAction(conversation.conversation.id);
+      let msgs: LocalMessage[];
+      if (initialRawMessages) {
+        msgs = initialRawMessages;
+      } else {
+        msgs = await getMessagesAction(conversation.conversation.id);
+      }
       if (!privateKey || !opponentPublicKey) return;
       const sharedKey = await getSharedKey();
 
@@ -359,7 +418,9 @@ export function ChatMain({ currentUserId, conversation }: ChatMainProps) {
         );
         setHasMoreMap((prev) => ({
           ...prev,
-          [conversation.conversation.id]: filtered.length === 15,
+          [conversation.conversation.id]: initialRawMessages
+            ? filtered.length === 20
+            : filtered.length === 15,
         }));
       }
     }
@@ -367,7 +428,12 @@ export function ChatMain({ currentUserId, conversation }: ChatMainProps) {
     return () => {
       mounted = false;
     };
-  }, [conversation.conversation.id, privateKey, opponentPublicKey]);
+  }, [
+    conversation.conversation.id,
+    privateKey,
+    opponentPublicKey,
+    initialRawMessages,
+  ]);
 
   // =========================
   // 2️⃣ Load older messages
@@ -857,9 +923,6 @@ export function ChatMain({ currentUserId, conversation }: ChatMainProps) {
               onDeleteClick={handleDropdownDelete}
               onEditClick={handleEditClick}
               // Long press (mobile → selection mode)
-              onLongPress={(id) => {
-                if (msg.senderId === currentUserId) enterSelectionMode(id);
-              }}
             />
           ))
         ) : (
